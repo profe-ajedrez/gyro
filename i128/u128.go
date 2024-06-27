@@ -280,7 +280,7 @@ func (u U128) AsFloat64() float64 {
 // AsI128 performs a direct cast of a U128 to an I128, which will interpret it
 // as a two's complement value.
 func (u U128) AsI128() I128 {
-	return I128{lo: u.lo, hi: u.hi}
+	return I128(u)
 }
 
 // IsI128 reports whether i can be represented in an I128.
