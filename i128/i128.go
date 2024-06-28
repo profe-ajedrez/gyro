@@ -306,7 +306,7 @@ func (i I128) AsBigInt() (b *big.Int) {
 // AsU128 performs a direct cast of an I128 to a U128. Negative numbers
 // become values > math.MaxI128.
 func (i I128) AsU128() U128 {
-	return U128{lo: i.lo, hi: i.hi}
+	return U128(i)
 }
 
 // IsU128 reports wehether i can be represented in a U128.

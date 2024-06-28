@@ -464,7 +464,7 @@ func (u U128) Xor(v U128) U128 {
 }
 
 func (u U128) Xor64(v uint64) U128 {
-	u.hi = u.hi ^ 0
+	// u.hi = u.hi ^ 0
 	u.lo = u.lo ^ v
 	return u
 }

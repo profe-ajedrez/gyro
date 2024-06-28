@@ -7,16 +7,6 @@ import (
 
 const (
 	maxScale = 16
-
-	uvnan    = 0x7FF8000000000001
-	uvinf    = 0x7FF0000000000000
-	uvneginf = 0xFFF0000000000000
-	uvone    = 0x3FF0000000000000
-	mask     = 0x7FF
-	shift    = 64 - 11 - 1
-	bias     = 1023
-	signMask = 1 << 63
-	fracMask = 1<<shift - 1
 )
 
 var tenInt = i128.I128FromRaw(0, 10)
@@ -25,6 +15,26 @@ var tenInt = i128.I128FromRaw(0, 10)
 var pow10tab = [...]int64{
 	1e00, 1e01, 1e02, 1e03, 1e04, 1e05, 1e06, 1e07, 1e08, 1e09,
 	1e10, 1e11, 1e12, 1e13, 1e14, 1e15, 1e16, 1e17, 1e18,
+}
+
+func NewZero() Gyro {
+	return Gyro{coeff: i128.I128{}, exp: 0}
+}
+
+func NewHundred() Gyro {
+	return Gyro{coeff: i128.I128FromRaw(0, 100), exp: 0}
+}
+
+func NewTen() Gyro {
+	return Gyro{coeff: tenInt, exp: 0}
+}
+
+func NewOne() Gyro {
+	return Gyro{coeff: i128.I128FromRaw(0, 1), exp: 0}
+}
+
+func NewMinusOne() Gyro {
+	return Gyro{coeff: i128.MustI128FromFloat64(-1), exp: 0}
 }
 
 func pow10max16[T constraints.Integer](v T) int64 {
