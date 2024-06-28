@@ -109,22 +109,26 @@ func NewFromString(s string) (Gyro, error) {
 		return Gyro{coeff: d, exp: 0}, nil
 	}
 
-	c, err := strconv.ParseUint(s[start:dIndex], 10, 64)
+	d, _, err := i128.I128FromString(s[start:dIndex] + s[dIndex+1:i])
 
 	if err != nil {
 		return newFromString(s, dIndex, i, exp)
 	}
 
-	e, err := strconv.ParseUint(s[dIndex+1:i], 10, 64)
+	// if i-dIndex-1 > MaxScale {
+	// 	i = max(MaxScale, 0)
+	// }
 
-	if err != nil {
-		return newFromString(s, dIndex, i, exp)
-	}
+	// e, err := strconv.ParseUint(s[dIndex+1:i], 10, 64)
 
-	d := i128.I128FromU64(c)
-	d = d.Mul64(pow10max16(int32(len(s[dIndex+1 : i]))))
-	ex := i128.I128FromU64(e)
-	d = d.Add(ex)
+	// if err != nil {
+	// 	return newFromString(s, dIndex, i, exp)
+	// }
+
+	// d := i128.I128FromU64(c)
+	// d =
+	// ex := i128.I128FromU64(e)
+	// d = d.Add(ex)
 
 	if neg {
 		d = d.Mul64(-1)
@@ -234,15 +238,19 @@ func (g Gyro) Mul(g2 Gyro) Gyro {
 	return g3.rescale(max(int32(expInt64), -MaxScale))
 }
 
+// Div returns the quotient of two Gyros.
+// Uses MaxDivisionScale digits of precision.
 func (g Gyro) Div(g2 Gyro) Gyro {
-	return g.DivRound(g2, MaxScale)
+	return g.DivRound(g2, MaxDivisionScale)
 }
 
+// DivRound divides two Gyros and rounds the result to the given scale.
+// Do not use over MaxDivisionScale digits of precision.
 func (g Gyro) DivRound(g2 Gyro, scale int32) Gyro {
 	if g2.Equal(NewZero()) {
 		panic("Attempted division by zero in Gyro.DivRound method")
 	}
-
+	// 1.058201058201058
 	q, r := g.QuoRem(g2, scale)
 	rv2 := r.coeff.Abs().Mul64(2)
 	r2 := Gyro{rv2, r.exp + scale}
@@ -277,12 +285,13 @@ func (g Gyro) QuoRem(g2 Gyro, precision int32) (Gyro, Gyro) {
 		aa = g.coeff
 		expo = i128.I128From64(pow10max16(-e))
 		bb = tenInt.Mul(expo)
-		scalerest = g.exp
+		scalerest = min(max(g.exp, -MaxScale), MaxScale)
 	} else {
+
 		expo = i128.I128From64(pow10max16(-e))
 		aa = g.coeff.Mul(expo)
 		bb = g2.coeff
-		scalerest = int32(scale) + g2.exp
+		scalerest = min(max(int32(scale)+g2.exp, -MaxScale), MaxScale)
 	}
 
 	q, r := aa.QuoRem(bb)

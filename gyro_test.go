@@ -49,7 +49,6 @@ func TestNew(t *testing.T) {
 	for i, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			actual := New(tc.coeff, tc.exp)
-			fmt.Println(actual.String())
 			if !tc.expected.coeff.Equal(actual.coeff) || actual.exp != tc.expected.exp {
 				t.Errorf("[test case %d] New(%v, %d) = [%v][%v], expected [%v][%v]", i, tc.coeff, tc.exp, actual.coeff, actual.exp, tc.expected.coeff, tc.expected.exp)
 			}
@@ -65,6 +64,13 @@ func TestNewFromString(t *testing.T) {
 		expected   Gyro
 		err        error
 	}{
+		{
+			name:       "Valid decimal with negative exponent with large fraction",
+			input:      "1.058201058201058",
+			shouldfail: false,
+			expected:   Gyro{coeff: i128.MustI128FromString("1058201058201058"), exp: -15},
+			err:        nil,
+		},
 		{
 			name:       "Valid decimal with negative exponent with large fraction",
 			input:      "-782378237823782378.12356784567890754433556677999999999999999",
@@ -148,10 +154,10 @@ func TestNewFromString(t *testing.T) {
 			} else if !tc.shouldfail && err != nil && err.Error() != tc.err.Error() {
 				t.Errorf("[test case %d] NewFromString(%q) expected error %v, but got %v", i, tc.input, tc.err, err)
 			} else if !tc.shouldfail && !actual.coeff.Equal(tc.expected.coeff) || actual.exp != tc.expected.exp {
-				// fmt.Println(actual.coeff.String())
-				// fmt.Println(actual.exp)
-				// fmt.Println(tc.expected.coeff.String())
-				// fmt.Println(tc.expected.exp)
+				fmt.Println(actual.coeff.String())
+				fmt.Println(actual.exp)
+				fmt.Println(tc.expected.coeff.String())
+				fmt.Println(tc.expected.exp)
 				t.Errorf("[test case %d] NewFromString(%q) = %v, expected %v", i, tc.input, actual, tc.expected)
 			}
 		})
@@ -260,7 +266,7 @@ func TestGyroFloat64(t *testing.T) {
 				t.Errorf("[test case %d] Float64() = %v, expected %v  <%f>", i, result, test.expected, result)
 			}
 
-			fmt.Printf("%f   %f\n", result, test.expected)
+			//fmt.Printf("%f   %f\n", result, test.expected)
 		})
 	}
 }
@@ -488,7 +494,9 @@ func TestDivRound(t *testing.T) {
 		precision int32
 		expected  string
 	}{
-		{"-10.10112212", "2.304", 16, "-4.3841675868055554"},
+
+		{"100", "94.5", 15, "1.058201058201058"},
+		{"-10.10112212", "2.304", 15, "-4.384167586805554"},
 		{"0.10", "0.3", 3, "0.333"},
 		{"10", "3", 1, "3.3"},
 		{"10", "2", 0, "5"},
