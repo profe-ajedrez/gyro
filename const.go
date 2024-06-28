@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	maxScale = 16
+	MaxScale = 16
 )
 
 var tenInt = i128.I128FromRaw(0, 10)

@@ -24,14 +24,14 @@ func New(coeff i128.I128, exp int32) Gyro {
 	}
 
 	if exp < 0 {
-		if abs(exp) > maxScale {
-			exp = -maxScale
+		if abs(exp) > MaxScale {
+			exp = -MaxScale
 			coeff = coeff.Quo64(pow10max16(-exp))
 		}
 	}
 
 	if exp > 0 {
-		exp = min(exp, maxScale)
+		exp = min(exp, MaxScale)
 		coeff = coeff.Mul64(pow10max16(exp))
 		exp = 0
 	}
@@ -88,9 +88,9 @@ func NewFromString(s string) (Gyro, error) {
 		exp = 0
 	}
 
-	if exp > maxScale {
-		exp = maxScale
-		i = maxScale + dIndex
+	if exp > MaxScale {
+		exp = MaxScale
+		i = MaxScale + dIndex
 	}
 
 	if dIndex == 0 {
@@ -229,16 +229,20 @@ func (g Gyro) Mul(g2 Gyro) Gyro {
 	}
 
 	if expInt64 > 0 {
-		return g3.rescale(min(int32(expInt64), maxScale))
+		return g3.rescale(min(int32(expInt64), MaxScale))
 	}
-	return g3.rescale(max(int32(expInt64), -maxScale))
+	return g3.rescale(max(int32(expInt64), -MaxScale))
 }
 
-// func (g Gyro) Div(g2 Gyro) (Gyro, error) {
-
-// }
+func (g Gyro) Div(g2 Gyro) Gyro {
+	return g.DivRound(g2, MaxScale)
+}
 
 func (g Gyro) DivRound(g2 Gyro, scale int32) Gyro {
+	if g2.Equal(NewZero()) {
+		panic("division by zero")
+	}
+
 	q, r := g.QuoRem(g2, scale)
 	rv2 := r.coeff.Abs().Mul64(2)
 	r2 := Gyro{rv2, r.exp + scale}
@@ -319,6 +323,32 @@ func (g Gyro) Cmp(g2 Gyro) int {
 	rd, rd2 := normalize(g, g2)
 
 	return rd.coeff.Cmp(rd2.coeff)
+}
+
+func (g Gyro) Round(places int32) Gyro {
+	if g.exp == -places {
+		return g
+	}
+
+	ret := g.rescale(-places - 1)
+
+	if ret.coeff.Sign() < 0 {
+		ret.coeff = ret.coeff.Sub(i128.I128From16(5))
+	} else {
+		ret.coeff = ret.coeff.Add(i128.I128From16(5))
+	}
+
+	_, m := ret.coeff.QuoRem64(10)
+
+	//ret.exp++
+
+	if ret.coeff.Sign() < 0 && m.Cmp(i128.I128FromRaw(0, 0)) != 0 {
+		ret.coeff = ret.coeff.Add64(1)
+	}
+
+	ret = ret.rescale(-places)
+
+	return ret
 }
 
 func normalize(g1, g2 Gyro) (Gyro, Gyro) {
