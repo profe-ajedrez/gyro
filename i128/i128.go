@@ -511,7 +511,7 @@ func (i I128) AbsU128() U128 {
 			i.hi++
 		}
 	}
-	return U128{hi: i.hi, lo: i.lo}
+	return U128(i)
 }
 
 // Cmp compares i to n and returns:
