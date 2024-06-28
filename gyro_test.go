@@ -550,3 +550,41 @@ func TestDivRoundByZero(t *testing.T) {
 
 	g1.DivRound(g2, 0)
 }
+
+func TestGyro_Round(t *testing.T) {
+	tests := []struct {
+		name string
+		num  func() Gyro
+		want Gyro
+	}{
+		{
+			name: "<4 decimals up>",
+			num:  func() Gyro { g, _ := NewFromString("134.17356"); return g.Round(4) },
+			want: func() Gyro { g, _ := NewFromString("134.1736"); return g }(),
+		},
+		{
+			name: "<3 decimals up>",
+			num:  func() Gyro { g, _ := NewFromString("134.17356"); return g.Round(3) },
+			want: func() Gyro { g, _ := NewFromString("134.174"); return g }(),
+		},
+		{
+			name: "<2 decimals up>",
+			num:  func() Gyro { g, _ := NewFromString("1.178"); return g.Round(2) },
+			want: func() Gyro { g, _ := NewFromString("1.18"); return g }(),
+		},
+		{
+			name: "<2 decimals down>",
+			num:  func() Gyro { g, _ := NewFromString("1.173"); return g.Round(2) },
+			want: func() Gyro { g, _ := NewFromString("1.17"); return g }(),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := tt.num()
+			if !got.Equal(tt.want) {
+				t.Errorf("Gyro.Round() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

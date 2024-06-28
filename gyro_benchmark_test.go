@@ -356,3 +356,38 @@ func BenchmarkDivRound(b *testing.B) {
 		})
 	}
 }
+
+func BenchmarkGyro_Round(b *testing.B) {
+	tests := []struct {
+		name string
+		num  func() Gyro
+	}{
+		{
+			name: "<2 decimals up>",
+			num:  func() Gyro { g, _ := NewFromString("3.478"); return g },
+		},
+		{
+			name: "<4 decimals up>",
+			num:  func() Gyro { g, _ := NewFromString("134.17356"); return g },
+		},
+		{
+			name: "<3 decimals up>",
+			num:  func() Gyro { g, _ := NewFromString("134.17356"); return g },
+		},
+		{
+			name: "<2 decimals up>",
+			num:  func() Gyro { g, _ := NewFromString("1.178"); return g },
+		},
+		{
+			name: "<2 decimals down>",
+			num:  func() Gyro { g, _ := NewFromString("1.173"); return g },
+		},
+	}
+
+	for _, tt := range tests {
+		b.ResetTimer()
+		b.Run(tt.name, func(b *testing.B) {
+			_ = tt.num().Round(1)
+		})
+	}
+}
