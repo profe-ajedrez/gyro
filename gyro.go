@@ -240,7 +240,7 @@ func (g Gyro) Div(g2 Gyro) Gyro {
 
 func (g Gyro) DivRound(g2 Gyro, scale int32) Gyro {
 	if g2.Equal(NewZero()) {
-		panic("division by zero")
+		panic("Attempted division by zero in Gyro.DivRound method")
 	}
 
 	q, r := g.QuoRem(g2, scale)
