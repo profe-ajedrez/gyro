@@ -21,16 +21,6 @@ type I128 struct {
 func I128FromRaw(hi, lo uint64) I128 { return I128{hi: hi, lo: lo} }
 
 func I128From64(v int64) (out I128) {
-	// There's a no-branch way of calculating this:
-	//   out.lo = uint64(v)
-	//   out.hi = ^((out.lo >> 63) + maxUint64)
-	//
-	// There may be a better one than that, but that's the one I found. Bogus
-	// microbenchmarks on an i7-3820 and an i7-6770HQ showed it may possibly be
-	// slightly faster, but at huge cost to the inliner. The no-branch
-	// version eats 20 more points out of Go 1.12's inlining budget of 80 than
-	// the 'if v < 0' verson, which is probably worse overall.
-
 	var hi uint64
 	if v < 0 {
 		hi = maxUint64
@@ -48,8 +38,7 @@ func I128FromU64(v uint64) I128 { return I128{lo: v} }
 // MaxI128/MinI128 and sets accurate to 'false'. Only decimal strings are
 // currently supported.
 func I128FromString(s string) (out I128, accurate bool, err error) {
-	// This deliberately limits the scope of what we accept as input just in case
-	// we decide to hand-roll our own fast decimal-only parser:
+
 	b, ok := new(big.Int).SetString(s, 10)
 	if !ok {
 		return out, false, fmt.Errorf("num: i128 string %q invalid", s)
@@ -163,12 +152,6 @@ func MustI128FromFloat32(f float32) I128 {
 // I128FromFloat64 creates a I128 from a float64.
 //
 // Any fractional portion will be truncated towards zero.
-//
-// Floats outside the bounds of a I128 may be discarded or clamped and inRange
-// will be set to false.
-//
-// NaN is treated as 0, inRange is set to false. This may change to a panic
-// at some point.
 func I128FromFloat64(f float64) (out I128, inRange bool) {
 	const spillPos = float64(maxUint64) // (1<<64) - 1
 	const spillNeg = -float64(maxUint64) - 1
@@ -368,15 +351,7 @@ func (i I128) MustInt64() int64 {
 	panic(fmt.Errorf("I128 %v is not representable as an int64", i))
 }
 
-// AsUint64 truncates the I128 to fit in a uint64. Values outside the range will
-// over/underflow. Signedness is discarded, as with the following conversion:
-//
-//	var i int64 = -3
-//	var u = uint32(i)
-//	fmt.Printf("%x", u)
-//	// fffffffd
-//
-// See IsUint64() if you want to check before you convert.
+// AsUint64 truncates the I128 to fit in a uint64. 
 func (i I128) AsUint64() uint64 {
 	return i.lo
 }
